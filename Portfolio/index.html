@@ -1,0 +1,78 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sam Barnhurst — Master Certification Portfolio</title>
+  <meta name="description" content="Master Certification Tracker, projects, and portfolio." />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>Sam Barnhurst</h1>
+      <p class="tag">Master Certification Tracker · Projects · Portfolio</p>
+      <nav class="nav">
+        <a href="#about">About</a>
+        <a href="#certs">Certifications</a>
+        <a href="#projects">Projects</a>
+        <a href="#playground">Live Code</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="about" class="card">
+      <h2>About</h2>
+      <p>Welcome to my all-in-one mastery portfolio. I’m building a complete, multi-track certification stack across Full-Stack Dev, AI/ML, Game Dev, and 3D Modeling. This site tracks progress, showcases projects, and houses a live code playground.</p>
+    </section>
+
+    <section id="certs" class="card">
+      <h2>Certifications Roadmap</h2>
+      <div id="cert-list" class="grid"></div>
+    </section>
+
+    <section id="projects" class="card">
+      <h2>Projects Gallery</h2>
+      <div id="project-list" class="grid"></div>
+    </section>
+
+    <section id="playground" class="card">
+      <h2>Live Code Playground</h2>
+      <p class="muted">Type HTML/JS below and click “Run” to render in the preview. Your edits stay in your browser (localStorage).</p>
+      <div class="playground">
+        <textarea id="code" spellcheck="false"><!-- Write HTML/JS here -->
+<h1>Hello, world!</h1>
+<p>This is my portfolio playground.</p>
+<script>
+  console.log("Playground ready!");
+<\/script>
+        </textarea>
+        <div class="controls">
+          <button id="runBtn">Run ▶</button>
+          <button id="saveBtn">Save 💾</button>
+          <button id="resetBtn">Reset ↺</button>
+        </div>
+        <iframe id="preview" title="Preview"></iframe>
+      </div>
+    </section>
+
+    <section id="contact" class="card">
+      <h2>Contact</h2>
+      <ul>
+        <li>GitHub: <a href="https://github.com/sambarnhurst" target="_blank" rel="noopener">sambarnhurst</a></li>
+        <li>Website: <a href="https://sambarnhurst.github.io/Portfolio/" target="_blank" rel="noopener">Portfolio</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <small>© <span id="year"></span> Sam Barnhurst. All rights reserved.</small>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

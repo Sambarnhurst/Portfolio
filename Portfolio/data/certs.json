@@ -1,0 +1,7 @@
+﻿[
+  { "name": "FreeCodeCamp: Responsive Web Design", "category": "Full-Stack", "summary": "Semantic HTML, CSS, accessibility, and layout foundations." },
+  { "name": "FreeCodeCamp: JavaScript Algorithms & Data Structures", "category": "Full-Stack", "summary": "Core JS, algorithms, ES6 features, and problem-solving." },
+  { "name": "FreeCodeCamp: Front End Development Libraries", "category": "Full-Stack", "summary": "React, Redux, Bootstrap, jQuery, and UI components." },
+  { "name": "Intro to AI/ML (free track)", "category": "AI/ML", "summary": "ML basics, model types, and ethical AI principles." },
+  { "name": "3D Modeling Foundations", "category": "3D", "summary": "Modeling workflows, topology, UVs, and exports." }
+]

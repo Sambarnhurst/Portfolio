@@ -1,0 +1,5 @@
+﻿[
+  { "title": "Mr. Whiskers Blog", "stack": "HTML/CSS", "blurb": "Semantic blog with accessible structure and images." },
+  { "title": "Cert Tracker App", "stack": "JS", "blurb": "Progress tracker with local storage and dynamic UI." },
+  { "title": "Game Prototype", "stack": "JS/WebGL", "blurb": "Small interactive game proof-of-concept." }
+]
