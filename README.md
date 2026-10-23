@@ -153,3 +153,12 @@ A prepared **game-only** Windows host ZIP is produced alongside the project upda
 Cloudflare dashboard setup is still required for the owner to create the named tunnel, install cloudflared and add `play.projectheaven.site` -> `http://127.0.0.1:8820`; site source changes alone **do not** start a game server or create that tunnel. The hosting PC must run continuously for public availability. For a true always-on experience, migrate Node and persistent data to a VPS/server.
 
 **Do not** deploy the game's old `client/index.html` under portfolio `/game/`: it uses absolute `/api/...`, `/assets/...` and `/ws` paths, and would break both the portfolio routes and gameplay without an appropriate reverse proxy. The separate hostname preserves correct API/WebSocket origin and session cookies.
+
+## Production game-host hardening (October 23, 2026)
+
+The HEAVEN 0.10.8.43 production game-only host package is **not hosted in this repository**. It supplies the Node server, browser client and in-game ADMIN-only Developer Studio, while reusing the three existing 0.10.8.42 asset ZIPs. Its `PRODUCTION_WEB_GAME.md` explains on-PC and VPS deployment, staged map publishing, multiplayer testing, backup and rollback.
+
+- The portfolio polls `https://play.projectheaven.site/api/ready` rather than basic `/api/health`.
+- `/api/ready` returns `ready:true` only after all game assets are installed and the initial admin account exists. If the server responds with HTTP 503 the gateway says **Preparing game server**, not **Online**.
+- The game's ADMIN-only diagnostics and world/level/character/HUD/Game Forge controls remain available in production behind server authentication; users cannot access them.
+- The game host still requires its own always-running PC or VPS and Cloudflare Tunnel for `play.projectheaven.site`. GitHub changes to this marketing site do **not** publish the game server or its archive.

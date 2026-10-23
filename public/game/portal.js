@@ -27,6 +27,10 @@ async function updateStatus(){
     detail.textContent="Build "+String(state.version||"unknown")+" · "+Math.max(0,Math.floor(Number(state.players)||0))+" players connected";
     play.hidden=false;admin.hidden=false;
     play.href=state.destination;admin.href=state.destination;
+  }else if(state.state==="preparing"){
+    banner.className="server-banner offline";
+    status.textContent="Preparing game server";
+    detail.textContent="Host reachable, but assets or first-time setup still incomplete";
   }else{throw new Error("Offline");}
  }catch{
   banner.className="server-banner offline";

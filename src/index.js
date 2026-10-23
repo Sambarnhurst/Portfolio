@@ -161,13 +161,14 @@ export default {
       // Server remains a separate persistent Node/WebSocket service.
       // Do not treat a configured DNS name as proof it is actually online.
       try {
-        const response=await fetch("https://play.projectheaven.site/api/health",{
+        const response=await fetch("https://play.projectheaven.site/api/ready",{
           method:"GET",redirect:"error",signal:AbortSignal.timeout(3500),
           headers:{"Accept":"application/json"}
         });
+        if(response.status===503)return json({online:false,state:"preparing"},200);
         if(!response.ok)return json({online:false},200);
         const data=await response.json();
-        if(data?.ok!==true || !String(data?.service||"").startsWith("HEAVEN"))return json({online:false},200);
+        if(data?.ok!==true || data?.ready!==true || !String(data?.service||"").startsWith("HEAVEN"))return json({online:false},200);
         return json({
           online:true,
           version:String(data.version||"unknown").slice(0,32),
