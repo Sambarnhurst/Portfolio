@@ -1,12 +1,87 @@
-// Public starter projects. This file is bundled into the Worker, not served from /public.
-// When D1 is configured, the published database records replace these defaults.
+/** Project records confirmed from Portfolio(1).zip (2026-10-23). Published means visible in the site, not playable/downloadable. */
 export const STARTER_PROJECTS = [
-  {id:"heaven-game",slug:"heaven-game",title:"HEAVEN",category:"HEAVEN",status:"In development",summary:"A planet-scale multiplayer first-person shooter with procedural terrain, physics-driven movement, and developer creator tools.",description:"Flagship game project currently in active development.",url:"/heaven.html",label:"GAME / FLAGSHIP",featured:1,published:1,sort_order:10},
-  {id:"heaven-world-editor",slug:"heaven-world-editor",title:"HEAVEN World Editor",category:"HEAVEN",status:"In development",summary:"World-building tools for sculpting procedural terrain, placing assets, and designing worlds on a spherical planet.",description:"Internal creator tool in the HEAVEN development workflow.",url:"",label:"EDITOR / WORLD",featured:1,published:1,sort_order:20},
-  {id:"heaven-character-editor",slug:"heaven-character-editor",title:"Character & Weapon Editor",category:"HEAVEN",status:"In development",summary:"A development workspace for first-person characters, skeletal attachments, hand grips, weapon alignment, and projectile systems.",description:"Internal game development tool.",url:"",label:"EDITOR / CHARACTER",featured:1,published:1,sort_order:30},
-  {id:"heaven-code-forge",slug:"heaven-code-forge",title:"Code Forge 3D",category:"Tools",status:"Prototype",summary:"An interactive 3D map of code files and their relationships, designed for exploring and editing complex projects.",description:"Code navigation and developer tooling experiment.",url:"",label:"TOOL / CODE",featured:1,published:1,sort_order:40},
-  {id:"learning-cube-forge",slug:"learning-cube-forge",title:"Learning Code Cube Forge",category:"Tools",status:"Prototype",summary:"A 3D learning and documentation environment with milestones, coding lessons, progress tracking, and personal notes.",description:"Interactive learning platform.",url:"",label:"TOOL / LEARNING",featured:0,published:1,sort_order:50},
-  {id:"local-agent-studio",slug:"local-agent-studio",title:"Local Agent Studio",category:"AI",status:"Prototype",summary:"A local AI workspace exploring model detection, task-based model routing, tool permissions, and desktop integrations.",description:"Local AI software experiment.",url:"",label:"AI / DESKTOP",featured:1,published:1,sort_order:60},
-  {id:"evolution-ai",slug:"evolution-ai",title:"Evolution AI",category:"AI",status:"Concept",summary:"An experimental small-model language-model architecture and training roadmap focused on local operation and future scaling.",description:"Research and development concept.",url:"",label:"AI / RESEARCH",featured:0,published:1,sort_order:70},
-  {id:"life-os",slug:"life-os",title:"Life OS",category:"Apps",status:"Prototype",summary:"A modular personal dashboard for tasks, planning, projects, learning, journals, and daily organization.",description:"Personal software project.",url:"",label:"APP / PRODUCTIVITY",featured:0,published:1,sort_order:80}
+  {
+    "id": "heaven-game",
+    "slug": "heaven-game",
+    "title": "HEAVEN FPS",
+    "category": "HEAVEN",
+    "status": "In development",
+    "summary": "A local multiplayer FPS build on a procedural spherical planet, with physics-driven combat, world editors, and reusable asset packs.",
+    "description": "Current local build: game 0.10.8.43 with three reusable asset ZIPs from generation 0.10.8.42. Browser hosting and public multiplayer deployment are not yet configured.",
+    "url": "/heaven.html",
+    "label": "GAME / LOCAL DEVELOPMENT",
+    "featured": 1,
+    "published": 1,
+    "sort_order": 10
+  },
+  {
+    "id": "learning-code-cube-forge",
+    "slug": "learning-code-cube-forge",
+    "title": "Certification Tracker & Code Workstation",
+    "category": "Tools",
+    "status": "Local build",
+    "summary": "A three-part learning workspace: certification progress, rich documentation notes, and a 3D code workspace with a file editor.",
+    "description": "Current package: Learning_Code_Cube_Forge_Portable_v4.0.zip. Portable offline HTML or optional Python local server. Includes 33 study milestones and backup/import tools.",
+    "url": "/forge.html",
+    "label": "WORKSTATION / V4.0",
+    "featured": 1,
+    "published": 1,
+    "sort_order": 20
+  },
+  {
+    "id": "local-agent-studio",
+    "slug": "local-agent-studio",
+    "title": "AI Workstation",
+    "category": "AI",
+    "status": "Source build",
+    "summary": "Local Agent Studio Professional v2.0: a Python-based local AI workspace with conversations, model routing, tool permissions, and project editing.",
+    "description": "Current package: Local_Agent_Studio_Professional_v2_0_SOURCE.zip. Python 3.11+ source release; not a precompiled executable. Models and inference engines are separate. Live AI operation on this computer is not verified.",
+    "url": "/ai-workstation.html",
+    "label": "LOCAL AI / SOURCE 2.0",
+    "featured": 1,
+    "published": 1,
+    "sort_order": 30
+  },
+  {
+    "id": "community-heaven",
+    "slug": "community-heaven",
+    "title": "HEAVEN Community Project",
+    "category": "HEAVEN",
+    "status": "Planned",
+    "summary": "An older community-focused HEAVEN concept that needs a rebuild before it can be presented as a functioning project.",
+    "description": "Current Portfolio ZIP contains an empty HEAVEN COMMUNITY PROJECT folder. Existing implementation is not present in this upload. No rebuilt release yet.",
+    "url": "",
+    "label": "FUTURE / REBUILD",
+    "featured": 0,
+    "published": 0,
+    "sort_order": 50
+  },
+  {
+    "id": "trading-bot",
+    "slug": "trading-bot",
+    "title": "Trading Bot",
+    "category": "AI",
+    "status": "Planned",
+    "summary": "Reserved project area for a future trading automation system. No usable trading bot is currently available.",
+    "description": "Current Portfolio ZIP contains an empty AI/TRADING BOT folder. Do not present this as operating, tested, profitable, or released.",
+    "url": "",
+    "label": "FUTURE / NOT OPERATIONAL",
+    "featured": 0,
+    "published": 0,
+    "sort_order": 60
+  },
+  {
+    "id": "investments",
+    "slug": "investments",
+    "title": "Investments Workspace",
+    "category": "Apps",
+    "status": "Planned",
+    "summary": "Reserved folder for investment research, tracking, and future financial tools. No implementation included yet.",
+    "description": "Current Portfolio ZIP contains an empty INVESTMENTS folder. Not a product or working tracker at this stage.",
+    "url": "",
+    "label": "FUTURE / RESERVED",
+    "featured": 0,
+    "published": 0,
+    "sort_order": 70
+  }
 ];

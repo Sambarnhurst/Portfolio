@@ -14,6 +14,8 @@ Live fallback (public routes only): https://portfolio.samueldbarnhurst.workers.d
 | `/projects.html` | Public project library with HEAVEN, AI, tools, and apps |
 | `/heaven.html` | Dedicated HEAVEN game overview |
 | `/game/` | Placeholder portal until actual HEAVEN browser build is published |
+| `/forge.html` | Certification Tracker & Code Workstation v4.0 details |
+| `/ai-workstation.html` | Local Agent Studio Professional v2.0 details |
 | `/dev` | Private developer content dashboard (requires Cloudflare Access) |
 | `/api/projects` | Published project listing only |
 | `/api/admin/projects` | Private project management API |
@@ -60,7 +62,7 @@ Do not commit secrets to this public repository. If any secret is absent, `/dev`
 
 ## 2. Activate saving and publishing with D1
 
-The website initially uses a built-in list of starter projects so the public pages work with no database. The secured developer page can display these in read-only mode. Add D1 when you're ready to create, edit, publish, and archive projects from the website.
+The website initially uses a built-in list verified from the user-supplied `Portfolio(1).zip` so the public pages work with no database. Only the three packaged project groups appear publicly; rebuilds and empty folders are developer-only draft records. The secured developer page can display these in read-only mode. Add D1 when you're ready to create, edit, publish, and archive projects from the website.
 
 Create the database:
 
@@ -100,6 +102,10 @@ Once D1 is bound and migrated, `/dev` supports:
 - Deletion and display ordering
 
 **Important:** D1 stores project metadata; it is not a file-upload service. Items marked **draft** are excluded from the public API and public cards. Project notes are private to the dashboard.
+
+## Actual inventory from Portfolio(1).zip (October 23, 2026)
+
+The uploaded outer ZIP is not deployed as a public artifact. Its local structure is documented in [PORTFOLIO_INVENTORY.md](PORTFOLIO_INVENTORY.md). The private developer API `/api/admin/inventory` exposes the recorded file names after Cloudflare Access authentication. None of the source archives are available for public download from the website yet.
 
 ## 3. Publishing game builds and project files
 

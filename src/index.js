@@ -1,4 +1,5 @@
 import { STARTER_PROJECTS } from "./starter-projects.js";
+import { PORTFOLIO_INVENTORY } from "./portfolio-inventory.js";
 import { ADMIN_HTML } from "./admin-page.js";
 
 // Private endpoints are not exposed as static assets. All access checks run inside the Worker.
@@ -73,7 +74,7 @@ function normalizeUrl(value) {
   throw Error("Use a relative site path or an http(s) URL");
 }
 const categories=new Set(["HEAVEN","AI","Tools","Apps"]);
-const statuses=new Set(["Concept","Planned","Prototype","In development","Live","Paused","Archived"]);
+const statuses=new Set(["Concept","Planned","Prototype","Local build","Source build","In development","Live","Paused","Archived"]);
 function cleanProject(input) {
   const s=v=>String(v??"").trim();
   const slug=s(input.slug).toLowerCase();
@@ -118,6 +119,7 @@ function sameOrigin(request) {
   return Boolean(origin && origin===new URL(request.url).origin);
 }
 async function adminApi(request,env,path) {
+  if(request.method==="GET"&&path==="/api/admin/inventory") return json({inventory:PORTFOLIO_INVENTORY});
   if(request.method==="GET"&&path==="/api/admin/projects") {
     try{return json(await adminProjects(env));}catch{return err("Database is not initialized. Run the D1 migration.",503);}
   }
