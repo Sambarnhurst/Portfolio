@@ -1,4 +1,4 @@
-/** Project records confirmed from Portfolio(1).zip (2026-10-23). Published means visible in the site, not playable/downloadable. */
+/** Project records confirmed from Portfolio(1).zip and PROJECT HEAVEN.zip (2026-10-23). Published means visible, not playable/downloadable. */
 export const STARTER_PROJECTS = [
   {
     "id": "heaven-game",
@@ -45,16 +45,16 @@ export const STARTER_PROJECTS = [
   {
     "id": "community-heaven",
     "slug": "community-heaven",
-    "title": "HEAVEN Community Project",
+    "title": "Project HEAVEN Community",
     "category": "HEAVEN",
-    "status": "Planned",
-    "summary": "An older community-focused HEAVEN concept that needs a rebuild before it can be presented as a functioning project.",
-    "description": "Current Portfolio ZIP contains an empty HEAVEN COMMUNITY PROJECT folder. Existing implementation is not present in this upload. No rebuilt release yet.",
-    "url": "",
-    "label": "FUTURE / REBUILD",
+    "status": "Prototype",
+    "summary": "Earlier community website prototype with a public town-building proposal, social feed, member system, project voting, OZREN team interfaces, and a file workspace. Rebuild required.",
+    "description": "Source: PROJECT HEAVEN.zip placed in Portfolio/HEAVEN COMMUNITY PROJECT. Archive preserves index.html, community.html, workspace.html, JavaScript/CSS assets and local Windows server shortcuts. The README says the HTML is a browser-saved snapshot; backend/API and live account data are not included. This is NOT a working deployable community platform. A full backend/auth/data migration rebuild is required.",
+    "url": "/community-project.html",
+    "label": "COMMUNITY / LEGACY PROTOTYPE",
     "featured": 0,
-    "published": 0,
-    "sort_order": 50
+    "published": 1,
+    "sort_order": 40
   },
   {
     "id": "trading-bot",

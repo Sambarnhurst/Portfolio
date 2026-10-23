@@ -16,6 +16,7 @@ Live fallback (public routes only): https://portfolio.samueldbarnhurst.workers.d
 | `/game/` | Placeholder portal until actual HEAVEN browser build is published |
 | `/forge.html` | Certification Tracker & Code Workstation v4.0 details |
 | `/ai-workstation.html` | Local Agent Studio Professional v2.0 details |
+| `/community-project.html` | Legacy Community HEAVEN project archive / rebuild overview |
 | `/dev` | Private developer content dashboard (requires Cloudflare Access) |
 | `/api/projects` | Published project listing only |
 | `/api/admin/projects` | Private project management API |
@@ -62,7 +63,7 @@ Do not commit secrets to this public repository. If any secret is absent, `/dev`
 
 ## 2. Activate saving and publishing with D1
 
-The website initially uses a built-in list verified from the user-supplied `Portfolio(1).zip` so the public pages work with no database. Only the three packaged project groups appear publicly; rebuilds and empty folders are developer-only draft records. The secured developer page can display these in read-only mode. Add D1 when you're ready to create, edit, publish, and archive projects from the website.
+The website initially uses a built-in list verified from the user-supplied `Portfolio(1).zip` so the public pages work with no database. The HEAVEN FPS, Code Cube Forge, and AI workstation remain three packaged projects. The old Project HEAVEN Community snapshot is described publicly as a prototype awaiting a rebuild; it is not hosted as a functioning social website. Trading bot and investments folders remain unpublished. The secured developer page can display these in read-only mode. Add D1 when you're ready to create, edit, publish, and archive projects from the website.
 
 Create the database:
 
@@ -86,6 +87,12 @@ Run the schema and starter-project seed:
 
 ```sh
 npx wrangler d1 execute portfolio-content --remote --file=database/0001-projects.sql
+```
+
+For an **already initialized** D1 database created from the previous project inventory, apply the optional community-prototype record update instead of re-running the initial seed:
+
+```sh
+npx wrangler d1 execute portfolio-content --remote --file=database/0002-community-prototype.sql
 ```
 
 Commit the new `wrangler.jsonc` binding, then deploy:
@@ -125,3 +132,7 @@ When the game is ready:
 - The public project card renderer uses DOM text nodes rather than injecting untrusted HTML.
 - Project URL input accepts only root-relative URLs or HTTP(S) links and disallows links to the private dashboard.
 - Configure and test the Access login **before** expecting `/dev` to be usable.
+
+## Project HEAVEN Community archive
+
+`Portfolio/HEAVEN COMMUNITY PROJECT/PROJECT HEAVEN.zip` is a legacy browser-saved website snapshot, not the HEAVEN FPS. Do not deploy its saved `index.html` over the active portfolio homepage or assume its community endpoints exist. See `PORTFOLIO_INVENTORY.md` for the file-level audit. The public community project page is an informational overview only. A future rebuild needs new auth, persistent API and UI integration.
