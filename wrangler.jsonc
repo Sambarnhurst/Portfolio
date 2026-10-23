@@ -1,14 +1,16 @@
 {
   "name": "portfolio",
   "compatibility_date": "2026-10-23",
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "directory": "./public",
     "not_found_handling": "404-page"
   },
   "routes": [
     {
-      "pattern": "projectheaven.site",
-      "custom_domain": true
+      "pattern": "projectheaven.site/*",
+      "zone_name": "projectheaven.site"
     }
   ]
 }
