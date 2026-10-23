@@ -156,6 +156,26 @@ async function adminApi(request,env,path) {
 export default {
   async fetch(request,env) {
     const path=new URL(request.url).pathname;
+    if(path==="/api/game-health") {
+      if(request.method!=="GET")return err("Method not allowed",405);
+      // Server remains a separate persistent Node/WebSocket service.
+      // Do not treat a configured DNS name as proof it is actually online.
+      try {
+        const response=await fetch("https://play.projectheaven.site/api/health",{
+          method:"GET",redirect:"error",signal:AbortSignal.timeout(3500),
+          headers:{"Accept":"application/json"}
+        });
+        if(!response.ok)return json({online:false},200);
+        const data=await response.json();
+        if(data?.ok!==true || !String(data?.service||"").startsWith("HEAVEN"))return json({online:false},200);
+        return json({
+          online:true,
+          version:String(data.version||"unknown").slice(0,32),
+          players:Math.max(0,Math.min(100000,Math.floor(Number(data?.runtime?.onlinePlayers)||0))),
+          destination:"https://play.projectheaven.site/"
+        });
+      }catch{return json({online:false},200);}
+    }
     if(path==="/api/projects") {
       if(request.method!=="GET")return err("Method not allowed",405);
       return json({projects:await publicProjects(env)});

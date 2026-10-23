@@ -13,12 +13,13 @@ Live fallback (public routes only): https://portfolio.samueldbarnhurst.workers.d
 | `/` | Public personal developer homepage |
 | `/projects.html` | Public project library with HEAVEN, AI, tools, and apps |
 | `/heaven.html` | Dedicated HEAVEN game overview |
-| `/game/` | Placeholder portal until actual HEAVEN browser build is published |
+| `/game/` | Live game gateway with automatic online/offline state and Player/Developer access explanation |
 | `/forge.html` | Certification Tracker & Code Workstation v4.0 details |
 | `/ai-workstation.html` | Local Agent Studio Professional v2.0 details |
 | `/community-project.html` | Legacy Community HEAVEN project archive / rebuild overview |
 | `/dev` | Private developer content dashboard (requires Cloudflare Access) |
 | `/api/projects` | Published project listing only |
+| `/api/game-health` | Public health probe for the separate `play.projectheaven.site` host |
 | `/api/admin/projects` | Private project management API |
 | `public/` | Files accessible to all visitors |
 | `src/` | Worker route handlers, private admin UI, and starter project data |
@@ -136,3 +137,19 @@ When the game is ready:
 ## Project HEAVEN Community archive
 
 `Portfolio/HEAVEN COMMUNITY PROJECT/PROJECT HEAVEN.zip` is a legacy browser-saved website snapshot, not the HEAVEN FPS. Do not deploy its saved `index.html` over the active portfolio homepage or assume its community endpoints exist. See `PORTFOLIO_INVENTORY.md` for the file-level audit. The public community project page is an informational overview only. A future rebuild needs new auth, persistent API and UI integration.
+
+## HEAVEN live game integration (game v0.10.8.43)
+
+The game is a **separate long-running Node.js/SQLite/WebSocket service**, not a Cloudflare Worker. Its client uses root-relative asset and API URLs and `/ws` WebSocket upgrades, so the entire application must be served on its **own** hostname.
+
+- Portfolio + health gateway: `https://projectheaven.site/game/`
+- HEAVEN live application: `https://play.projectheaven.site/`
+- Tunnel published app service URL: `http://127.0.0.1:8820`
+- Public status: `GET /api/game-health` performs a bounded probe of `https://play.projectheaven.site/api/health`; it never claims the server is online without the game's health response.
+- Regular players use the game's **USER** login. Owner uses the game's **ADMIN** login for Developer Studio and in-game editors. The portfolio's separate `/dev` content manager remains Cloudflare Access gated and is not the game identity system.
+
+A prepared **game-only** Windows host ZIP is produced alongside the project update, containing `HEAVEN_GAME/START_WEB_HOST.bat`, `CHECK_WEB_HOST.bat`, `tools/prepare-live-host.ps1`, and `LIVE_WEB_HOST_SETUP.md`. The three **0.10.8.42** asset ZIPs are kept permanently alongside the extracted game; the host launcher recognizes ` (1)` download suffixes and renames a unique matching file without downloading new assets. Account and world data stay at `%LOCALAPPDATA%\\HEAVEN_GAME_DEV`. Read the ZIP's setup guide for the Cloudflare Tunnel steps.
+
+Cloudflare dashboard setup is still required for the owner to create the named tunnel, install cloudflared and add `play.projectheaven.site` -> `http://127.0.0.1:8820`; site source changes alone **do not** start a game server or create that tunnel. The hosting PC must run continuously for public availability. For a true always-on experience, migrate Node and persistent data to a VPS/server.
+
+**Do not** deploy the game's old `client/index.html` under portfolio `/game/`: it uses absolute `/api/...`, `/assets/...` and `/ws` paths, and would break both the portfolio routes and gameplay without an appropriate reverse proxy. The separate hostname preserves correct API/WebSocket origin and session cookies.
