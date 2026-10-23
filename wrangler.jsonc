@@ -4,5 +4,11 @@
   "assets": {
     "directory": "./public",
     "not_found_handling": "404-page"
-  }
+  },
+  "routes": [
+    {
+      "pattern": "projectheaven.site",
+      "custom_domain": true
+    }
+  ]
 }
