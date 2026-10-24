@@ -14,6 +14,7 @@ class Element {
     this.textContent = '';
     this.hidden = false;
     this.handlers = {};
+    this.attributes = {};
     this.classList = {
       toggle: (name, enabled) => {
         const classes = new Set(this.className.split(/\s+/).filter(Boolean));
@@ -25,6 +26,8 @@ class Element {
   }
   append(...nodes) { this.children.push(...nodes); }
   replaceChildren(...nodes) { this.children = nodes; }
+  setAttribute(name, value) { this.attributes[name] = String(value); }
+  getAttribute(name) { return this.attributes[name] ?? null; }
   addEventListener(event, callback) { this.handlers[event] = callback; }
   click() { this.handlers.click?.(); }
   get visibleText() { return [this.textContent, ...this.children.map(node => node.visibleText)].join(' '); }
@@ -126,5 +129,19 @@ test('HTTP and HTTPS project cards open safely in a new tab', async () => {
     assert.equal(project.tagName, 'A');
     assert.equal(project.target, '_blank');
     assert.equal(project.rel, 'noopener noreferrer');
+  }
+});
+
+test('project filters expose their selected state to assistive technology', async () => {
+  const page = harness(async () => ({ ok: true, json: async () => ({ projects: exampleProjects }) }));
+  await page.init();
+  const selected = () => page.filters.filter(button => button.getAttribute('aria-pressed') === 'true');
+  assert.equal(selected().length, 1);
+  assert.equal(selected()[0].dataset.filter, 'All');
+  for (const category of ['HEAVEN', 'AI', 'Tools', 'All']) {
+    page.select(category);
+    assert.equal(selected().length, 1, 'exactly one filter should be announced as selected');
+    assert.equal(selected()[0].dataset.filter, category);
+    assert.ok(page.filters.every(button => ['true', 'false'].includes(button.getAttribute('aria-pressed'))));
   }
 });
