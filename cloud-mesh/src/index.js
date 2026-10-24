@@ -168,6 +168,10 @@ export class MeshRoom {
   async webSocketClose(ws){
     const id=ws.deserializeAttachment()?.id;
     if(!id)return;
+    // A delayed close event from an earlier connection must not expire a
+    // participant's newly reconnected session or announce a false departure.
+    const peers=this.ctx.getWebSockets().filter(other=>other!==ws);
+    if(peers.some(other=>other.deserializeAttachment()?.id===id))return;
     const room=await this.ctx.storage.get("room");
     if(room){
       for(const player of Object.values(room.tickets)){
@@ -175,7 +179,7 @@ export class MeshRoom {
       }
       await this.ctx.storage.put("room",room);
     }
-    for(const other of this.ctx.getWebSockets())if(other!==ws)try{other.send(JSON.stringify({type:"peer_left",id}));}catch{}
+    for(const other of peers)try{other.send(JSON.stringify({type:"peer_left",id}));}catch{}
   }
   webSocketError(ws){try{ws.close(1011,"Connection error");}catch{}}
   async alarm(){
