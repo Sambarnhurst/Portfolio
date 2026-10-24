@@ -35,6 +35,7 @@ test('offline status keeps Play and developer links hidden', async () => {
   const p = portal(async () => ({ ok: true, json: async () => ({ online: false }) }));
   await flush();
   assert.equal(p.get('server-status').textContent, 'Server offline');
+  assert.equal(p.get('server-detail').textContent, 'Multiplayer readiness is not confirmed. The host may be offline, still starting, or missing setup.');
   assert.equal(p.get('play-button').hidden, true);
   assert.equal(p.get('dev-game-link').hidden, true);
   assert.equal(p.get('refresh-button').disabled, false);
