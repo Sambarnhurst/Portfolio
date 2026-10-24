@@ -29,7 +29,7 @@ class Element {
   setAttribute(name, value) { this.attributes[name] = String(value); }
   getAttribute(name) { return this.attributes[name] ?? null; }
   addEventListener(event, callback) { this.handlers[event] = callback; }
-  click() { this.handlers.click?.(); }
+  click() { return this.handlers.click?.(); }
   get visibleText() { return [this.textContent, ...this.children.map(node => node.visibleText)].join(' '); }
 }
 
@@ -67,7 +67,9 @@ function harness(fetchImplementation) {
   return {
     all, featured, empty, filters,
     init: () => callbacks.DOMContentLoaded(),
-    select: category => filters.find(button => button.dataset.filter === category).click()
+    select: category => filters.find(button => button.dataset.filter === category).click(),
+    retryButton: () => all.children.find(node => node.tagName === 'BUTTON'),
+    retry: () => all.children.find(node => node.tagName === 'BUTTON')?.click()
   };
 }
 
@@ -144,4 +146,50 @@ test('project filters expose their selected state to assistive technology', asyn
     assert.equal(selected()[0].dataset.filter, category);
     assert.ok(page.filters.every(button => ['true', 'false'].includes(button.getAttribute('aria-pressed'))));
   }
+});
+
+
+test('project listings recover from transient API failure without reloading or losing the selected filter', async () => {
+  let requests = 0;
+  const page = harness(async () => {
+    requests++;
+    if (requests === 1) throw Error('temporary network failure');
+    return { ok: true, json: async () => ({ projects: exampleProjects }) };
+  });
+  await page.init();
+  assert.match(page.all.visibleText, /Project listing is temporarily unavailable/);
+  assert.equal(page.retryButton()?.textContent, 'Retry loading projects');
+  page.select('AI');
+  await page.retry();
+  assert.equal(requests, 2);
+  assert.equal(page.all.children.length, 1);
+  assert.match(page.all.visibleText, /AI Workstation/);
+  assert.equal(page.retryButton(), undefined);
+  assert.equal(page.featured.children.length, 2);
+});
+
+test('retry prevents overlapping requests and remains available after another API failure', async () => {
+  let requests = 0;
+  let release;
+  const page = harness(async () => {
+    requests++;
+    if (requests === 1) throw Error('initial outage');
+    if (requests === 2) return new Promise(resolve => {
+      release = () => resolve({ ok: false, status: 503 });
+    });
+    return { ok: true, json: async () => ({ projects: exampleProjects }) };
+  });
+  await page.init();
+  const button = page.retryButton();
+  const pending = button.click();
+  assert.equal(button.disabled, true);
+  await button.click();
+  assert.equal(requests, 2);
+  release();
+  await pending;
+  assert.match(page.all.visibleText, /Project listing is temporarily unavailable/);
+  assert.equal(page.retryButton()?.textContent, 'Retry loading projects');
+  await page.retry();
+  assert.equal(requests, 3);
+  assert.equal(page.all.children.length, 3);
 });
