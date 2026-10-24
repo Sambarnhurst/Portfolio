@@ -81,3 +81,26 @@ test("disconnected guest retains a temporary reconnect reservation",async()=>{
   assert.ok(saved.tickets.hash.expiresAt>Date.now());
   assert.ok(saved.tickets.hash.expiresAt<=Date.now()+90000);
 });
+
+test("late close after reconnect preserves the new session and peer presence",async()=>{
+  const store=storage();
+  const roomId="reconnect-room",guestId="guest-1",hash="ticket-hash";
+  const expiry=Date.now()+60*60*1000;
+  await store.put("room",{roomId,maxPlayers:3,expiresAt:expiry,
+    hostHash:"0".repeat(64),tickets:{[hash]:{id:guestId,name:"Guest",expiresAt:expiry}}});
+  const broadcasts=[];
+  const oldSocket={deserializeAttachment:()=>({id:guestId}),send:()=>{}};
+  const replacement={deserializeAttachment:()=>({id:guestId}),send:()=>{}};
+  const observer={deserializeAttachment:()=>({id:"host"}),send:message=>broadcasts.push(JSON.parse(message))};
+  let active=[replacement,observer];
+  const room=new MeshRoom({storage:store,getWebSockets:()=>active,acceptWebSocket:()=>{}},{});
+  await room.webSocketClose(oldSocket);
+  assert.equal((await store.get("room")).tickets[hash].expiresAt,expiry);
+  assert.deepEqual(broadcasts,[],"old connection must not announce replacement as disconnected");
+  active=[observer];
+  await room.webSocketClose(replacement);
+  const saved=await store.get("room");
+  assert.ok(saved.tickets[hash].expiresAt<=Date.now()+90000);
+  assert.ok(saved.tickets[hash].expiresAt>Date.now());
+  assert.deepEqual(broadcasts,[{type:"peer_left",id:guestId}]);
+});
