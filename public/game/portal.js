@@ -32,12 +32,16 @@ async function updateStatus(){
     banner.className="server-banner offline";
     status.textContent="Preparing game server";
     detail.textContent="Host reachable, but assets or first-time setup still incomplete";
-  }else{throw new Error("Offline");}
+  }else if(state.online===false){
+    banner.className="server-banner offline";
+    status.textContent="Server offline";
+    detail.textContent="Multiplayer readiness is not confirmed. The host may be offline, still starting, or missing setup.";
+  }else{throw new Error("Invalid status response");}
   }finally{clearTimeout(timeout);}
  }catch{
   banner.className="server-banner offline";
-  status.textContent="Server offline";
-  detail.textContent="Multiplayer readiness is not confirmed. The host may be offline, still starting, or missing setup.";
+  status.textContent="Status unavailable";
+  detail.textContent="Unable to check multiplayer readiness right now. Please try again.";
  }
  refresh.disabled=false;active=false;
 }
