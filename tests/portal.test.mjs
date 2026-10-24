@@ -70,3 +70,33 @@ test('stalled JSON body times out, restores refresh and hides links', async () =
   assert.equal(p.get('refresh-button').disabled, false);
   assert.equal(p.timers.size, 0);
 });
+
+test('online to offline refresh hides previously visible Play and developer links', async () => {
+  let call = 0;
+  const p = portal(async () => ({
+    ok: true,
+    json: async () => ++call === 1
+      ? { online: true, destination: 'https://play.projectheaven.site/', version: 'test', players: 1 }
+      : { online: false }
+  }));
+  await flush();
+  assert.equal(p.get('play-button').hidden, false);
+  assert.equal(p.get('dev-game-link').hidden, false);
+  p.refresh();
+  await flush();
+  assert.equal(p.get('server-status').textContent, 'Server offline');
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.get('refresh-button').disabled, false);
+  assert.equal(p.timers.size, 0);
+});
+
+test('preparing game host never reveals Play or developer links', async () => {
+  const p = portal(async () => ({ ok: true, json: async () => ({ online: false, state: 'preparing' }) }));
+  await flush();
+  assert.equal(p.get('server-status').textContent, 'Preparing game server');
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.get('refresh-button').disabled, false);
+  assert.equal(p.timers.size, 0);
+});
