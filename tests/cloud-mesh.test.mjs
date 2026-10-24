@@ -42,3 +42,42 @@ test("mesh broker does not expose dev or arbitrary API paths",async()=>{
   assert.equal((await worker.fetch(req("/api/admin/users"),env)).status,404);
   assert.equal((await worker.fetch(req("/v1/rooms/not-a-room"),env)).status,404);
 });
+
+test("expired unused invitations release capacity and cannot reconnect",async()=>{
+  const store=storage();
+  const ctx={storage:store,getWebSockets:()=>[],acceptWebSocket:()=>{}};
+  const room=new MeshRoom(ctx,{});
+  const env={MESH_ENABLED:"true",MESH_INTERNAL_BETA_KEY:"backend-test-key",MESH_ROOMS:{
+    idFromName:s=>s,get:()=>({fetch:r=>room.fetch(r)})
+  }};
+  const created=await worker.fetch(req("/v1/rooms",{method:"POST",headers:auth,
+    body:JSON.stringify({title:"Expiry test",maxPlayers:2})}),env);
+  assert.equal(created.status,201);
+  const {roomId}=await created.json();
+  const path="/v1/rooms/"+roomId+"/join";
+  const first=await worker.fetch(req(path,{method:"POST",headers:auth,body:'{"name":"First"}'}),env);
+  assert.equal(first.status,201);
+  const {ticket:expiredTicket}=await first.json();
+  assert.equal((await worker.fetch(req(path,{method:"POST",headers:auth,body:'{"name":"Second"}'}),env)).status,409);
+  const state=await store.get("room");
+  for(const p of Object.values(state.tickets))p.expiresAt=Date.now()-1;
+  await store.put("room",state);
+  const second=await worker.fetch(req(path,{method:"POST",headers:auth,body:'{"name":"Second"}'}),env);
+  assert.equal(second.status,201);
+  const stale=await worker.fetch(req("/v1/rooms/"+roomId+"/ws",{
+    headers:{"sec-websocket-protocol":"heaven.mesh.v1, ticket."+expiredTicket}
+  }),env);
+  assert.equal(stale.status,403);
+});
+test("disconnected guest retains a temporary reconnect reservation",async()=>{
+  const store=storage();
+  const fakeSocket={deserializeAttachment:()=>({id:"guest-1"}),send:()=>{}};
+  const ctx={storage:store,getWebSockets:()=>[],acceptWebSocket:()=>{}};
+  const room=new MeshRoom(ctx,{});
+  await store.put("room",{roomId:"test",maxPlayers:2,expiresAt:Date.now()+3600000,
+    hostHash:"0".repeat(64),tickets:{"hash":{id:"guest-1",name:"Guest",expiresAt:Date.now()+3600000}}});
+  await room.webSocketClose(fakeSocket);
+  const saved=await store.get("room");
+  assert.ok(saved.tickets.hash.expiresAt>Date.now());
+  assert.ok(saved.tickets.hash.expiresAt<=Date.now()+90000);
+});
