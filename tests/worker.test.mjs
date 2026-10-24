@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import worker from '../src/index.js';
+import worker, { normalizeUrl } from '../src/index.js';
 
 const request=(path,options)=>new Request('https://projectheaven.site'+path,options);
 test('game gateway only enables Play for a verified ready HEAVEN response',async t=>{
@@ -41,4 +41,13 @@ test('public inventory excludes drafts and private descriptions',async()=>{
   const {projects}=await response.json();assert.ok(projects.length);
   assert.ok(projects.every(p=>p.published&&!('description' in p)));
   assert.equal((await worker.fetch(request('/api/projects',{method:'POST'}),{})).status,405);
+});
+
+
+test('project URLs reject browser-normalized offsite redirects while preserving valid links', () => {
+  for (const url of ['/\\attacker.example/path', '/\t/attacker.example/path', '//attacker.example/path']) {
+    assert.throws(() => normalizeUrl(url), /URL contains invalid characters|Use a relative site path/);
+  }
+  assert.equal(normalizeUrl('/heaven.html'), '/heaven.html');
+  assert.equal(normalizeUrl('https://example.com/path'), 'https://example.com/path');
 });
