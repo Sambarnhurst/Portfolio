@@ -166,3 +166,59 @@ test('backgrounded game portal hides stale links and rechecks immediately on for
   assert.equal(p.get('refresh-button').disabled, false);
   assert.equal(p.timers.size, 0);
 });
+
+
+test('stale in-flight ready response cannot reveal links after tab hide/show', async () => {
+  let firstResolve, secondResolve, calls = 0;
+  const p = portal(() => {
+    calls++;
+    return new Promise(resolve => {
+      if (calls === 1) firstResolve = resolve;
+      else secondResolve = resolve;
+    });
+  });
+  await flush();
+  p.setVisibility(true);
+  p.setVisibility(false);
+  assert.equal(calls, 1, 'foregrounding during an active request queues a fresh check');
+  firstResolve({ ok: true, json: async () => ({
+    online: true, destination: 'https://play.projectheaven.site/', version: 'old', players: 2
+  }) });
+  await flush();
+  assert.equal(calls, 2, 'stale response must trigger a new readiness request');
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.get('server-status').textContent, 'Checking live server…');
+  secondResolve({ ok: true, json: async () => ({ online: false }) });
+  await flush();
+  assert.equal(p.get('server-status').textContent, 'Server offline');
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.get('refresh-button').disabled, false);
+  assert.equal(p.timers.size, 0);
+});
+
+test('ready response finishing in a hidden tab never reveals links', async () => {
+  let firstResolve, calls = 0;
+  const p = portal(() => {
+    calls++;
+    if (calls === 1) return new Promise(resolve => { firstResolve = resolve; });
+    return Promise.resolve({ ok: true, json: async () => ({ online: false }) });
+  });
+  await flush();
+  p.setVisibility(true);
+  firstResolve({ ok: true, json: async () => ({
+    online: true, destination: 'https://play.projectheaven.site/', version: 'old', players: 1
+  }) });
+  await flush();
+  assert.equal(calls, 1);
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  p.setVisibility(false);
+  await flush();
+  assert.equal(calls, 2, 'foreground should start a fresh request');
+  assert.equal(p.get('server-status').textContent, 'Server offline');
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.timers.size, 0);
+});
