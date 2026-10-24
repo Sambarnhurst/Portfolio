@@ -36,11 +36,11 @@ async function verifyDeveloper(request,env) {
   if (hostname!=="projectheaven.site" && hostname!=="www.projectheaven.site") return false;
   const domain=String(env.CF_ACCESS_TEAM_DOMAIN).toLowerCase().replace(/^https?:\/\//,"").replace(/\/$/,"");
   if (!/^[a-z0-9-]+\.cloudflareaccess\.com$/.test(domain)) return false;
-  const token=tokenFromRequest(request);
-  if (!token || token.length>12000) return false;
-  const parts=token.split(".");
-  if(parts.length!==3) return false;
   try {
+    const token=tokenFromRequest(request);
+    if (!token || token.length>12000) return false;
+    const parts=token.split(".");
+    if(parts.length!==3) return false;
     const header=decodeJSON(parts[0]), payload=decodeJSON(parts[1]);
     if(header.alg!=="RS256" || typeof header.kid!=="string") return false;
     const expectedIssuer="https://"+domain;
@@ -165,10 +165,11 @@ export default {
           method:"GET",redirect:"error",signal:AbortSignal.timeout(3500),
           headers:{"Accept":"application/json"}
         });
-        if(response.status===503)return json({online:false,state:"preparing"},200);
-        if(!response.ok)return json({online:false},200);
+        if(!response.ok&&response.status!==503)return json({online:false},200);
         const data=await response.json();
-        if(data?.ok!==true || data?.ready!==true || !String(data?.service||"").startsWith("HEAVEN"))return json({online:false},200);
+        if(data?.ok!==true || !String(data?.service||"").startsWith("HEAVEN"))return json({online:false},200);
+        if(response.status===503&&data.ready===false)return json({online:false,state:"preparing"},200);
+        if(!response.ok||data.ready!==true)return json({online:false},200);
         return json({
           online:true,
           version:String(data.version||"unknown").slice(0,32),
