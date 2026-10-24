@@ -101,7 +101,7 @@ async function publicProjects(env) {
     return results||[];
   } catch(e) {
     console.error("Public projects query failed",e);
-    return publicStarterProjects();
+    throw e;
   }
 }
 async function adminProjects(env) {
@@ -183,7 +183,8 @@ export default {
     }
     if(path==="/api/projects") {
       if(request.method!=="GET")return err("Method not allowed",405);
-      return json({projects:await publicProjects(env)});
+      try{return json({projects:await publicProjects(env)});}
+      catch{return err("Project listing temporarily unavailable",503);}
     }
     const privatePath=(path==="/dev"||path.startsWith("/dev/")||path==="/api/admin"||path.startsWith("/api/admin/"));
     if(privatePath) {
