@@ -34,3 +34,6 @@ A participant connects to \`GET /v1/rooms/<roomId>/ws\` with WebSocket subprotoc
 - Run automated API and 2-device browser tests, then stage with a test subdomain before enabling a public Play button.
 
 **Not included:** autonomous GitHub/Cloudflare account linking, DNS changes, billing approval, browser game client changes, or automatic production deployment.
+
+### Browser WebSocket origin restrictions
+Set the staging Worker's `MESH_ALLOWED_ORIGINS` variable to a comma-separated list of **exact HTTPS origins** of the approved browser game clients (for example `https://staging.example.test`). A missing or mismatched allowlist blocks browser WebSocket upgrades even if the participant holds a ticket. Non-browser backends may omit Origin only when they send `Authorization: Bearer <MESH_INTERNAL_BETA_KEY>`. Browsers must never receive that secret. The origin check is defense-in-depth and does not replace the cryptographically random WebSocket ticket or real account authentication. Existing production routes remain unchanged.
