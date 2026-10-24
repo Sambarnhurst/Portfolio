@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker, { normalizeUrl } from '../src/index.js';
+import { ADMIN_HTML } from '../src/admin-page.js';
+import { runInNewContext } from 'node:vm';
 
 const request=(path,options)=>new Request('https://projectheaven.site'+path,options);
 test('game gateway only enables Play for a verified ready HEAVEN response',async t=>{
@@ -50,4 +52,22 @@ test('project URLs reject browser-normalized offsite redirects while preserving 
   }
   assert.equal(normalizeUrl('/heaven.html'), '/heaven.html');
   assert.equal(normalizeUrl('https://example.com/path'), 'https://example.com/path');
+});
+
+
+test('private admin project preview rejects legacy offsite-redirect URLs', () => {
+  const script = ADMIN_HTML.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(script, 'developer dashboard inline script must exist');
+  const definition = script.match(/function safePreviewUrl\(url\)\{[^\n]*\}/)?.[0];
+  assert.ok(definition, 'the dashboard must have a safe URL predicate');
+  const safe = runInNewContext('(' + definition + ')');
+  for (const value of ['/\\attacker.example/path', '/\t/attacker.example/path',
+    '/\n/attacker.example/path', '//attacker.example/path', 'javascript:alert(1)', '']) {
+    assert.equal(safe(value), false, 'unsafe URL must not be previewed: ' + JSON.stringify(value));
+  }
+  for (const value of ['/heaven.html', 'https://example.com/path', 'http://example.com/path']) {
+    assert.equal(safe(value), true, 'valid link must remain previewable: ' + value);
+  }
+  assert.match(script, /link\.href=safePreviewUrl\(p\.url\)\?p\.url:"\/projects\.html"/,
+    'the actual preview anchor must use the tested predicate');
 });
