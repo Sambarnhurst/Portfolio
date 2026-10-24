@@ -13,7 +13,9 @@ function portal(fetchImplementation) {
   }]));
   const timers = new Map();
   let timerId = 0;
-  const document = { getElementById: id => nodes.get(id), hidden: false };
+  const document = { getElementById: id => nodes.get(id), hidden: false, handlers: {},
+    addEventListener(event, handler) { this.handlers[event] = handler; }
+  };
   runInNewContext(source, {
     document,
     fetch: fetchImplementation,
@@ -26,7 +28,8 @@ function portal(fetchImplementation) {
     get: id => nodes.get(id),
     tick: () => { for (const [id, callback] of [...timers]) { timers.delete(id); callback(); } },
     timers,
-    refresh: () => nodes.get('refresh-button').handlers.click()
+    refresh: () => nodes.get('refresh-button').handlers.click(),
+    setVisibility(hidden) { document.hidden = hidden; document.handlers.visibilitychange?.(); }
   };
 }
 const flush = async () => { for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve)); };
@@ -125,6 +128,39 @@ test('preparing game host never reveals Play or developer links', async () => {
   const p = portal(async () => ({ ok: true, json: async () => ({ online: false, state: 'preparing' }) }));
   await flush();
   assert.equal(p.get('server-status').textContent, 'Preparing game server');
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.get('refresh-button').disabled, false);
+  assert.equal(p.timers.size, 0);
+});
+
+
+test('backgrounded game portal hides stale links and rechecks immediately on foreground', async () => {
+  let calls = 0;
+  const p = portal(async () => ({
+    ok: true,
+    json: async () => ++calls === 1
+      ? { online: true, destination: 'https://play.projectheaven.site/', version: 'test', players: 1 }
+      : { online: false }
+  }));
+  await flush();
+  assert.equal(calls, 1);
+  assert.equal(p.get('play-button').hidden, false);
+  assert.equal(p.get('dev-game-link').hidden, false);
+
+  // No interval tick occurs while the tab is backgrounded.
+  p.setVisibility(true);
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(calls, 1);
+
+  // Foreground must check readiness now, not wait for the 30-second poll.
+  p.setVisibility(false);
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  await flush();
+  assert.equal(calls, 2);
+  assert.equal(p.get('server-status').textContent, 'Server offline');
   assert.equal(p.get('play-button').hidden, true);
   assert.equal(p.get('dev-game-link').hidden, true);
   assert.equal(p.get('refresh-button').disabled, false);
