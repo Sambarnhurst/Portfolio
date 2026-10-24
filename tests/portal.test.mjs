@@ -64,7 +64,37 @@ test('stalled JSON body times out, restores refresh and hides links', async () =
   assert.equal(p.timers.size, 1, 'timeout must remain active until JSON is read');
   p.tick();
   await flush();
-  assert.equal(p.get('server-status').textContent, 'Server offline');
+  assert.equal(p.get('server-status').textContent, 'Status unavailable');
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.get('refresh-button').disabled, false);
+  assert.equal(p.timers.size, 0);
+});
+
+test('game status API failure is unavailable, not a confirmed offline server', async () => {
+  let calls = 0;
+  const p = portal(async () => {
+    calls++;
+    return calls === 1
+      ? { ok: true, json: async () => ({ online: true, destination: 'https://play.projectheaven.site/', version: 'test', players: 1 }) }
+      : { ok: false, status: 503 };
+  });
+  await flush();
+  assert.equal(p.get('server-status').textContent, 'Server online');
+  p.refresh();
+  await flush();
+  assert.equal(p.get('server-status').textContent, 'Status unavailable');
+  assert.match(p.get('server-detail').textContent, /Unable to check multiplayer readiness/);
+  assert.equal(p.get('play-button').hidden, true);
+  assert.equal(p.get('dev-game-link').hidden, true);
+  assert.equal(p.get('refresh-button').disabled, false);
+  assert.equal(p.timers.size, 0);
+});
+
+test('malformed game health JSON never implies confirmed offline or reveals links', async () => {
+  const p = portal(async () => ({ ok: true, json: async () => ({ message: 'upstream error' }) }));
+  await flush();
+  assert.equal(p.get('server-status').textContent, 'Status unavailable');
   assert.equal(p.get('play-button').hidden, true);
   assert.equal(p.get('dev-game-link').hidden, true);
   assert.equal(p.get('refresh-button').disabled, false);
