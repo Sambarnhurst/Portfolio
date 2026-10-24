@@ -37,7 +37,7 @@ async function updateStatus(){
  }catch{
   banner.className="server-banner offline";
   status.textContent="Server offline";
-  detail.textContent="Hosting PC, game server, or Cloudflare Tunnel is not connected yet";
+  detail.textContent="Multiplayer readiness is not confirmed. The host may be offline, still starting, or missing setup.";
  }
  refresh.disabled=false;active=false;
 }
