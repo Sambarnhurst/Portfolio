@@ -223,3 +223,14 @@ test('filter changes during an in-flight retry preserve its disabled state and r
   assert.equal(page.all.children.length, 1);
   assert.match(page.all.visibleText, /AI Workstation/);
 });
+
+
+test('malformed relative project URLs never create navigable offsite cards', async () => {
+  const unsafe = ['/\\attacker.example/path', '/\t/attacker.example/path', '//attacker.example/path'];
+  const page = harness(async () => ({ ok: true, json: async () => ({
+    projects: unsafe.map((url, index) => ({ ...exampleProjects[0], title: 'Unsafe ' + index, url }))
+  }) }));
+  await page.init();
+  assert.equal(page.all.children.length, unsafe.length);
+  assert.ok(page.all.children.every(card => card.tagName === 'ARTICLE' && !card.href));
+});
