@@ -4,6 +4,8 @@ const headers = {"content-type":"application/json; charset=utf-8","cache-control
 const reply = (value,status=200) => new Response(JSON.stringify(value),{status,headers});
 const bad = (message,status=400) => reply({error:message},status);
 const ttlMs=2*60*60*1000;
+const unclaimedTicketMs=5*60*1000;
+const reconnectGraceMs=90*1000;
 const validCode=code=>/^[a-f0-9]{24}$/.test(code);
 const freshToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,"0")).join("");
 async function tokenHash(token){
@@ -99,10 +101,21 @@ export class MeshRoom {
       return reply({roomId:room.roomId,title:room.title,maxPlayers:room.maxPlayers,
         connected:this.ctx.getWebSockets().length,expiresAt:room.expiresAt,gameplayReady:false});
     if(path==="/join"&&request.method==="POST"){
-      if(Object.keys(room.tickets).length>=room.maxPlayers-1)return bad("Room is full",409);
+      // Unclaimed invitations must not permanently exhaust a room's capacity.
+      // A connected participant retains a slot; a disconnected participant
+      // gets a short reconnect grace period before the slot is reclaimed.
+      const now=Date.now();
+      const activeIds=new Set(this.ctx.getWebSockets().map(ws=>ws.deserializeAttachment()?.id));
+      for(const [hash,player] of Object.entries(room.tickets)){
+        if(!activeIds.has(player.id)&&player.expiresAt<=now)delete room.tickets[hash];
+      }
+      if(Object.keys(room.tickets).length>=room.maxPlayers-1){
+        await this.ctx.storage.put("room",room);
+        return bad("Room is full",409);
+      }
       const data=await parseJson(request);
       const ticket=freshToken(),id=freshToken().slice(0,16);
-      room.tickets[await tokenHash(ticket)]={id,name:data.name};
+      room.tickets[await tokenHash(ticket)]={id,name:data.name,expiresAt:now+unclaimedTicketMs};
       await this.ctx.storage.put("room",room);
       return reply({roomId:room.roomId,playerId:id,ticket,expiresAt:room.expiresAt},201);
     }
@@ -118,8 +131,9 @@ export class MeshRoom {
       const auth=protocols.find(x=>/^ticket\.[a-f0-9]{64}$/.test(x));
       if(!protocols.includes("heaven.mesh.v1")||!auth)return bad("WebSocket ticket required",401);
       const key=await tokenHash(auth.slice(7));
+      const guest=room.tickets[key];
       const person=key===room.hostHash?{id:"host",name:"Host",role:"host"}:
-        room.tickets[key]?{...room.tickets[key],role:"player"}:null;
+        guest&&guest.expiresAt>Date.now()?{id:guest.id,name:guest.name,role:"player"}:null;
       if(!person)return bad("Invalid WebSocket ticket",403);
       const sockets=this.ctx.getWebSockets();
       if(sockets.length>=room.maxPlayers)return bad("Room capacity reached",409);
@@ -128,6 +142,10 @@ export class MeshRoom {
       const client=pair[0], server=pair[1];
       server.serializeAttachment(person);
       this.ctx.acceptWebSocket(server);
+      if(person.role==="player"){
+        room.tickets[key].expiresAt=room.expiresAt;
+        await this.ctx.storage.put("room",room);
+      }
       server.send(JSON.stringify({type:"welcome",self:person.id,
         peers:sockets.map(ws=>ws.deserializeAttachment()).filter(Boolean).map(p=>({id:p.id,name:p.name}))}));
       for(const ws of sockets)try{ws.send(JSON.stringify({type:"peer_joined",id:person.id,name:person.name}));}catch{}
@@ -147,8 +165,16 @@ export class MeshRoom {
     if(!src||!target||target===ws)return;
     try{target.send(JSON.stringify({type:"signal",from:src,kind:value.kind,payload:value.payload}));}catch{}
   }
-  webSocketClose(ws){
+  async webSocketClose(ws){
     const id=ws.deserializeAttachment()?.id;
+    if(!id)return;
+    const room=await this.ctx.storage.get("room");
+    if(room){
+      for(const player of Object.values(room.tickets)){
+        if(player.id===id)player.expiresAt=Math.min(room.expiresAt,Date.now()+reconnectGraceMs);
+      }
+      await this.ctx.storage.put("room",room);
+    }
     for(const other of this.ctx.getWebSockets())if(other!==ws)try{other.send(JSON.stringify({type:"peer_left",id}));}catch{}
   }
   webSocketError(ws){try{ws.close(1011,"Connection error");}catch{}}
