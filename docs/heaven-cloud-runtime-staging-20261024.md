@@ -36,3 +36,9 @@ Open `projectheaven.site` from phone or PC, create and join multiplayer game roo
 
 ## Operational policy
 Do not expose private game ZIPs or data via public GitHub. Do not change production Cloudflare routes, access controls, or turn on public multiplayer before test gates and user approval. Scheduled build cycle can continue working on safe staging code/tests and report evidence, but cannot promise uninterrupted background execution or automatic production deployment.
+
+## Cloud mesh room lifecycle hardening (2026-10-24 follow-up)
+- Added a five-minute expiry for issued but unused guest join tickets. An abandoned join no longer reserves one of the room's 2–12 seats for the entire two-hour room lifetime.
+- WebSocket acceptance extends the connected guest's reservation through the room lifetime; disconnect changes it to a 90-second reconnect window. The next join prunes expired, disconnected reservations.
+- Added regression tests for room-capacity recovery, rejection of expired tickets, and disconnect grace timing. This is a signaling-only improvement, **not** proof of multiplayer gameplay or deployment.
+- Cloud hosting remains **unprovisioned** and the game source archives remain private in the ChatGPT Library; the production website has not changed.
