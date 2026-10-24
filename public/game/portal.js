@@ -46,6 +46,12 @@ async function updateStatus(){
  refresh.disabled=false;active=false;
 }
 refresh.addEventListener("click",updateStatus);
+// Background tabs can retain an outdated online status. Hide launch links
+// while hidden, then revalidate immediately when the tab becomes visible.
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden){play.hidden=true;admin.hidden=true;}
+ else updateStatus();
+});
 updateStatus();
 setInterval(()=>{if(!document.hidden)updateStatus()},30000);
 })();
