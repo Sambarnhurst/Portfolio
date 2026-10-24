@@ -71,3 +71,36 @@ test('private admin project preview rejects legacy offsite-redirect URLs', () =>
   assert.match(script, /link\.href=safePreviewUrl\(p\.url\)\?p\.url:"\/projects\.html"/,
     'the actual preview anchor must use the tested predicate');
 });
+
+
+test('configured project database failures return 503 rather than republishing starter records', async () => {
+  const env = { DB: { prepare(sql) {
+    assert.match(sql, /WHERE published=1/);
+    return { all: async () => { throw new Error('D1 temporarily unavailable'); } };
+  } } };
+  const response = await worker.fetch(request('/api/projects'), env);
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  const body = await response.json();
+  assert.deepEqual(body, { error: 'Project listing temporarily unavailable' });
+  assert.equal('projects' in body, false, 'stale starter projects must not be returned');
+});
+
+test('healthy project database still returns its published records', async () => {
+  const published = [{ slug: 'published-only', title: 'Published', published: 1, featured: 1 }];
+  const env = { DB: { prepare(sql) {
+    assert.match(sql, /WHERE published=1/);
+    return { all: async () => ({ results: published }) };
+  } } };
+  const response = await worker.fetch(request('/api/projects'), env);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { projects: published });
+});
+
+test('unbound project database retains the explicitly published starter fallback', async () => {
+  const response = await worker.fetch(request('/api/projects'), {});
+  assert.equal(response.status, 200);
+  const { projects } = await response.json();
+  assert.ok(projects.length > 0);
+  assert.ok(projects.every(project => project.published && !('description' in project)));
+});
