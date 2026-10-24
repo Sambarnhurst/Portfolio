@@ -193,3 +193,33 @@ test('retry prevents overlapping requests and remains available after another AP
   assert.equal(requests, 3);
   assert.equal(page.all.children.length, 3);
 });
+
+
+test('filter changes during an in-flight retry preserve its disabled state and recover afterward', async () => {
+  let requests = 0;
+  let release;
+  const page = harness(async () => {
+    requests++;
+    if (requests === 1) throw Error('initial outage');
+    if (requests === 2) return new Promise(resolve => {
+      release = () => resolve({ ok: false, status: 503 });
+    });
+    return { ok: true, json: async () => ({ projects: exampleProjects }) };
+  });
+  await page.init();
+  const pending = page.retry();
+  assert.equal(page.retryButton()?.disabled, true);
+  page.select('AI');
+  assert.equal(page.retryButton()?.disabled, true, 'a filter change must not re-enable retry while loading');
+  assert.equal(page.retryButton()?.textContent, 'Retrying…');
+  await page.retry();
+  assert.equal(requests, 2, 'a second click must not create another request');
+  release();
+  await pending;
+  assert.equal(page.retryButton()?.disabled, false, 'retry must re-enable after failure');
+  assert.equal(page.retryButton()?.textContent, 'Retry loading projects');
+  await page.retry();
+  assert.equal(requests, 3);
+  assert.equal(page.all.children.length, 1);
+  assert.match(page.all.visibleText, /AI Workstation/);
+});
