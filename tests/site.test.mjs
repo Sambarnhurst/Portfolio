@@ -77,7 +77,10 @@ const exampleProjects = [
 for (const [label, fetchImplementation] of [
   ['network failure', async () => { throw Error('network unavailable'); }],
   ['HTTP 503', async () => ({ ok: false, status: 503 })],
-  ['invalid JSON', async () => ({ ok: true, json: async () => { throw SyntaxError('invalid JSON'); } })]
+  ['invalid JSON', async () => ({ ok: true, json: async () => { throw SyntaxError('invalid JSON'); } })],
+  ['HTTP 200 with missing projects', async () => ({ ok: true, json: async () => ({ error: 'backend failure' }) })],
+  ['HTTP 200 with null projects', async () => ({ ok: true, json: async () => ({ projects: null }) })],
+  ['HTTP 200 with non-array projects', async () => ({ ok: true, json: async () => ({ projects: 'invalid' }) })]
 ]) {
   test(`project API ${label} remains an error after changing filters`, async () => {
     const page = harness(fetchImplementation);
