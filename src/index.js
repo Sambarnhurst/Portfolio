@@ -65,10 +65,13 @@ async function verifyDeveloper(request,env) {
     return await crypto.subtle.verify("RSASSA-PKCS1-v1_5",key,decodeBase64Url(parts[2]),new TextEncoder().encode(parts[0]+"."+parts[1]));
   } catch {return false;}
 }
-function normalizeUrl(value) {
+export function normalizeUrl(value) {
   const url=String(value||"").trim();
   if(!url) return "";
   if(url.length>500) throw Error("URL is too long");
+  // WHATWG URL parsing treats backslashes and embedded tabs/newlines as separators.
+  // Reject ambiguous values before they can turn an apparent relative link offsite.
+  if(/[\\\u0000-\u001f\u007f]/.test(url)) throw Error("URL contains invalid characters");
   if(url.startsWith("/")&&!url.startsWith("//")&&!/^\/(?:dev(?:\/|$)|api\/admin(?:\/|$))/i.test(url))return url;
   try{const parsed=new URL(url);if(parsed.protocol==="https:"||parsed.protocol==="http:")return url;}catch{}
   throw Error("Use a relative site path or an http(s) URL");
