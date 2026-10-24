@@ -42,3 +42,9 @@ Do not expose private game ZIPs or data via public GitHub. Do not change product
 - WebSocket acceptance extends the connected guest's reservation through the room lifetime; disconnect changes it to a 90-second reconnect window. The next join prunes expired, disconnected reservations.
 - Added regression tests for room-capacity recovery, rejection of expired tickets, and disconnect grace timing. This is a signaling-only improvement, **not** proof of multiplayer gameplay or deployment.
 - Cloud hosting remains **unprovisioned** and the game source archives remain private in the ChatGPT Library; the production website has not changed.
+
+## WebSocket reconnect race hardening (2026-10-24, subsequent staging cycle)
+- Identified a session-lifecycle race: a delayed close event for a previous guest socket could shorten the invitation expiry after the same guest had already reconnected, and broadcast a spurious `peer_left` event.
+- `MeshRoom.webSocketClose` now checks accepted sockets for an active replacement with the same participant ID. When one exists, the stale close event leaves the reservation intact and does not broadcast a departure.
+- Added a regression that exercises both the stale-close case and a genuine later disconnect, checking the 90-second grace period and peer notification.
+- This is a **staging signaling-only** change. It does not establish authenticated player identity, authoritative gameplay, cloud runtime availability, or successful mobile/desktop play.
