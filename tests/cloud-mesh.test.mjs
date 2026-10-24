@@ -104,3 +104,30 @@ test("late close after reconnect preserves the new session and peer presence",as
   assert.ok(saved.tickets[hash].expiresAt>Date.now());
   assert.deepEqual(broadcasts,[{type:"peer_left",id:guestId}]);
 });
+
+test("WebSocket handshake requires allowlisted browser origin or trusted backend",async()=>{
+  const roomId="a".repeat(24);
+  let forwarded=0;
+  const env={MESH_ENABLED:"true",MESH_INTERNAL_BETA_KEY:"backend-test-key",
+    MESH_ALLOWED_ORIGINS:"https://staging.example.test, https://another.example.test",
+    MESH_ROOMS:{idFromName:id=>id,get:()=>({fetch:async()=>{forwarded++;return new Response("forwarded");}})}
+  };
+  const ws=(headers={})=>worker.fetch(req("/v1/rooms/"+roomId+"/ws",{
+    headers:{"upgrade":"websocket",...headers}
+  }),env);
+  assert.equal((await ws({"origin":"https://evil.example.test"})).status,403);
+  assert.equal((await ws({"origin":"null"})).status,403);
+  assert.equal((await ws({"origin":"http://staging.example.test"})).status,403);
+  assert.equal((await ws({"origin":"https://staging.example.test.attacker.test"})).status,403);
+  assert.equal((await ws()).status,403);
+  assert.equal(forwarded,0,"blocked handshakes must never reach Durable Objects");
+  assert.equal((await ws({"origin":"https://staging.example.test"})).status,200);
+  assert.equal((await ws({"origin":"https://another.example.test"})).status,200);
+  assert.equal((await ws({"authorization":"Bearer backend-test-key"})).status,200);
+  assert.equal(forwarded,3);
+  const withoutAllowlist={...env,MESH_ALLOWED_ORIGINS:""};
+  const blocked=await worker.fetch(req("/v1/rooms/"+roomId+"/ws",{
+    headers:{"upgrade":"websocket","origin":"https://staging.example.test"}
+  }),withoutAllowlist);
+  assert.equal(blocked.status,403,"missing origin allowlist must fail closed");
+});
