@@ -75,6 +75,19 @@ export default {
     if(status)return stub.fetch(new Request("https://mesh.internal/status"));
     if((request.headers.get("upgrade")||"").toLowerCase()!=="websocket")
       return bad("WebSocket upgrade required",426);
+    // Browser WebSockets send an Origin header. Only explicitly configured
+    // origins may open a signaling connection; a trusted non-browser backend
+    // may omit Origin when it supplies the backend bearer credential.
+    // This supplements, but never replaces, the per-participant ticket.
+    const origin=request.headers.get("origin");
+    if(origin!==null){
+      const allowed=(env.MESH_ALLOWED_ORIGINS||"").split(",").map(value=>value.trim()).filter(Boolean);
+      if(!allowed.includes(origin)||origin==="null")return bad("WebSocket origin not allowed",403);
+      try{if(new URL(origin).origin!==origin||!/^https:\/\//.test(origin))return bad("WebSocket origin not allowed",403);}
+      catch{return bad("WebSocket origin not allowed",403);}
+    }else if(request.headers.get("authorization")!=="Bearer "+env.MESH_INTERNAL_BETA_KEY){
+      return bad("WebSocket origin or trusted backend authorization required",403);
+    }
     return stub.fetch(new Request("https://mesh.internal/ws",{headers:request.headers}));
   }
 };
