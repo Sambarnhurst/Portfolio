@@ -14,3 +14,5 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Verify isolated cloud mesh Worker bundle
+        run: npx wrangler deploy --dry-run --config cloud-mesh/wrangler.jsonc --outdir dist-cloud-mesh
