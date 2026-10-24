@@ -7,8 +7,10 @@ const play=document.getElementById("play-button");
 const admin=document.getElementById("dev-game-link");
 const refresh=document.getElementById("refresh-button");
 let active=false;
+let visibilityGeneration=0;
 async function updateStatus(){
  if(active)return;active=true;
+ const checkGeneration=visibilityGeneration;
  refresh.disabled=true;
  status.textContent="Checking live server…";detail.textContent="Checking whether multiplayer is reachable";
  banner.className="server-banner";
@@ -22,7 +24,11 @@ async function updateStatus(){
    // Keep the timeout active while reading the response body, not just the headers.
    // A stalled JSON stream must not leave the portal stuck in "Checking" forever.
    const state=await response.json();
-  if(state.online===true && state.destination==="https://play.projectheaven.site/"){
+  // A result started before a tab visibility change is no longer authoritative.
+  if(document.hidden || checkGeneration!==visibilityGeneration){
+    status.textContent="Checking live server…";
+    detail.textContent="Rechecking current availability";
+  }else if(state.online===true && state.destination==="https://play.projectheaven.site/"){
     banner.className="server-banner online";
     status.textContent="Server online";
     detail.textContent="Build "+String(state.version||"unknown")+" · "+Math.max(0,Math.floor(Number(state.players)||0))+" players connected";
@@ -44,11 +50,14 @@ async function updateStatus(){
   detail.textContent="Unable to check multiplayer readiness right now. Please try again.";
  }
  refresh.disabled=false;active=false;
+ // If a foreground event happened mid-request, immediately fetch a fresh result.
+ if(checkGeneration!==visibilityGeneration && !document.hidden)updateStatus();
 }
 refresh.addEventListener("click",updateStatus);
 // Background tabs can retain an outdated online status. Hide launch links
 // while hidden, then revalidate immediately when the tab becomes visible.
 document.addEventListener("visibilitychange",()=>{
+ visibilityGeneration++;
  if(document.hidden){play.hidden=true;admin.hidden=true;}
  else updateStatus();
 });
