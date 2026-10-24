@@ -48,3 +48,9 @@ Do not expose private game ZIPs or data via public GitHub. Do not change product
 - `MeshRoom.webSocketClose` now checks accepted sockets for an active replacement with the same participant ID. When one exists, the stale close event leaves the reservation intact and does not broadcast a departure.
 - Added a regression that exercises both the stale-close case and a genuine later disconnect, checking the 90-second grace period and peer notification.
 - This is a **staging signaling-only** change. It does not establish authenticated player identity, authoritative gameplay, cloud runtime availability, or successful mobile/desktop play.
+
+## Browser WebSocket origin hardening (2026-10-24, latest staging cycle)
+- The signaling Worker now rejects browser WebSocket upgrades unless their exact HTTPS Origin is in the explicit comma-separated `MESH_ALLOWED_ORIGINS` Worker variable. Missing configuration fails closed for browser upgrades. Non-browser clients without Origin must instead supply the trusted backend bearer secret.
+- This is defense-in-depth against unauthorized browser origins; Origin headers can be spoofed by non-browser clients and do **not** replace the existing random participant WebSocket ticket or future server-verified player identity.
+- Added regression coverage for blocked unknown/null/insecure/lookalike origins, missing Origin, both allowlisted origins, trusted backend bypass, and a missing allowlist. The production site remains untouched.
+- Before private staging activation, configure `MESH_ALLOWED_ORIGINS` with the actual approved staging web client origin. Never expose `MESH_INTERNAL_BETA_KEY` in browser code. Verify with real browser WebSocket handshakes and ticket validation.
