@@ -1,0 +1,24 @@
+name: HEAVEN Cloud Infrastructure Readiness
+on:
+  pull_request:
+    paths:
+      - 'infrastructure/heaven-cloud/**'
+      - '.github/workflows/heaven-cloud-readiness.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  infrastructure-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check cloud deployment safety and no-prod-deploy defaults
+        shell: bash
+        run: |
+          set -eu
+          test -f infrastructure/heaven-cloud/README.md
+          test -f infrastructure/heaven-cloud/docker-compose.example.yml
+          grep -q 'HEAVEN_CLOUD_MODE' infrastructure/heaven-cloud/docker-compose.example.yml
+          grep -q '127.0.0.1:8820:8820' infrastructure/heaven-cloud/docker-compose.example.yml
+          grep -q 'heaven_persistent:/data' infrastructure/heaven-cloud/docker-compose.example.yml
+          echo 'Cloud deployment documentation and staging template checks passed.'
