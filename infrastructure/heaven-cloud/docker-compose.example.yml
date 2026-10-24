@@ -1,0 +1,22 @@
+# STAGING EXAMPLE. Do not expose 127.0.0.1 staging port publicly without HTTPS proxy.
+# Place beside the downloadable cloud-ready HEAVEN Dockerfile and game/ directory.
+services:
+  heaven:
+    build: .
+    ports: ["127.0.0.1:8820:8820"]
+    environment:
+      NODE_ENV: production
+      HEAVEN_CLOUD_MODE: "1"
+      HEAVEN_GAME_HOST: 0.0.0.0
+      HEAVEN_GAME_PORT: "8820"
+      HEAVEN_GAME_DATA_DIR: /data
+      HEAVEN_ADMIN_SETUP_TOKEN: ${HEAVEN_ADMIN_SETUP_TOKEN:?Set in deployment secrets}
+    volumes: ["heaven_persistent:/data"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8820/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+volumes:
+  heaven_persistent:
