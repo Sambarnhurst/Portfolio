@@ -16,11 +16,12 @@ async function updateStatus(){
  try {
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),6000);
-  let response;
-  try{response=await fetch("/api/game-health",{cache:"no-store",signal:controller.signal,headers:{Accept:"application/json"}});}
-  finally{clearTimeout(timeout);}
-  if(!response.ok)throw new Error("Game status unavailable");
-  const state=await response.json();
+  try {
+   const response=await fetch("/api/game-health",{cache:"no-store",signal:controller.signal,headers:{Accept:"application/json"}});
+   if(!response.ok)throw new Error("Game status unavailable");
+   // Keep the timeout active while reading the response body, not just the headers.
+   // A stalled JSON stream must not leave the portal stuck in "Checking" forever.
+   const state=await response.json();
   if(state.online===true && state.destination==="https://play.projectheaven.site/"){
     banner.className="server-banner online";
     status.textContent="Server online";
@@ -32,6 +33,7 @@ async function updateStatus(){
     status.textContent="Preparing game server";
     detail.textContent="Host reachable, but assets or first-time setup still incomplete";
   }else{throw new Error("Offline");}
+  }finally{clearTimeout(timeout);}
  }catch{
   banner.className="server-banner offline";
   status.textContent="Server offline";
