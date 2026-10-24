@@ -65,7 +65,7 @@ test("expired unused invitations release capacity and cannot reconnect",async()=
   const second=await worker.fetch(req(path,{method:"POST",headers:auth,body:'{"name":"Second"}'}),env);
   assert.equal(second.status,201);
   const stale=await worker.fetch(req("/v1/rooms/"+roomId+"/ws",{
-    headers:{"sec-websocket-protocol":"heaven.mesh.v1, ticket."+expiredTicket}
+    headers:{"upgrade":"websocket","sec-websocket-protocol":"heaven.mesh.v1, ticket."+expiredTicket}
   }),env);
   assert.equal(stale.status,403);
 });
